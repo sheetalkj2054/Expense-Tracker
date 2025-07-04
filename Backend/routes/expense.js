@@ -4,12 +4,14 @@ const Expense = require("../models/Expense");
 
 // ADD EXPENSE
 router.post("/", async (req, res) => {
-  const newExpense = Expense(req.body);
+  // Instantiate model correctly
+  const newExpense = new Expense(req.body);
   try {
     const expense = await newExpense.save();
-    res.status(201).json(expense);
+    return res.status(201).json(expense);
   } catch (error) {
-    res.status(500).json(error);
+    console.error("Expense save failed:", error);
+    return res.status(500).json({ message: error.message });
   }
 });
 
@@ -17,9 +19,10 @@ router.post("/", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const expenses = await Expense.find().sort({ createdAt: -1 });
-    res.status(200).json(expenses);
+    return res.status(200).json(expenses);
   } catch (error) {
-    res.status(500).json(error);
+    console.error("Fetching expenses failed:", error);
+    return res.status(500).json({ message: error.message });
   }
 });
 
@@ -31,19 +34,27 @@ router.put("/:id", async (req, res) => {
       { $set: req.body },
       { new: true }
     );
-    res.status(200).json(expense);
+    if (!expense) {
+      return res.status(404).json({ message: "Expense not found" });
+    }
+    return res.status(200).json(expense);
   } catch (error) {
-    res.status(500).json(error);
+    console.error("Updating expense failed:", error);
+    return res.status(500).json({ message: error.message });
   }
 });
 
 // DELETE EXPENSE
 router.delete("/:id", async (req, res) => {
   try {
-    await Expense.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "Expense successfully deleted" });
+    const expense = await Expense.findByIdAndDelete(req.params.id);
+    if (!expense) {
+      return res.status(404).json({ message: "Expense not found" });
+    }
+    return res.status(200).json({ message: "Expense successfully deleted" });
   } catch (error) {
-    res.status(500).json(error);
+    console.error("Deleting expense failed:", error);
+    return res.status(500).json({ message: error.message });
   }
 });
 
