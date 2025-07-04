@@ -1,46 +1,50 @@
-// routes/expense.js
-const router = require("express").Router();
+const express = require("express");
+const router = express.Router();
+const Expense = require("../models/Expense");
 
-// temporary in‑memory store
-let store = [];
-
-// CREATE
-router.post("/", (req, res) => {
-  console.log("POST /expenses body:", req.body);
-  const { label, value, date } = req.body;
-  if (!label || value == null || !date) {
-    return res.status(400).json({ error: "All fields required" });
+// ADD EXPENSE
+router.post("/", async (req, res) => {
+  const newExpense = Expense(req.body);
+  try {
+    const expense = await newExpense.save();
+    res.status(201).json(expense);
+  } catch (error) {
+    res.status(500).json(error);
   }
-  const newExp = {
-    _id: Date.now().toString(),
-    label,
-    value: Number(value),
-    date,
-  };
-  store.unshift(newExp);
-  return res.status(201).json(newExp);
 });
 
-// READ
-router.get("/", (req, res) => {
-  console.log("GET /expenses →", store.length, "items");
-  return res.json(store);
+// GET ALL EXPENSES
+router.get("/", async (req, res) => {
+  try {
+    const expenses = await Expense.find().sort({ createdAt: -1 });
+    res.status(200).json(expenses);
+  } catch (error) {
+    res.status(500).json(error);
+  }
 });
 
-// UPDATE
-router.put("/:id", (req, res) => {
-  console.log("PUT /expenses/:id", req.params.id, req.body);
-  const idx = store.findIndex((e) => e._id === req.params.id);
-  if (idx === -1) return res.sendStatus(404);
-  store[idx] = { ...store[idx], ...req.body };
-  return res.json(store[idx]);
+// UPDATE EXPENSE
+router.put("/:id", async (req, res) => {
+  try {
+    const expense = await Expense.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true }
+    );
+    res.status(200).json(expense);
+  } catch (error) {
+    res.status(500).json(error);
+  }
 });
 
-// DELETE
-router.delete("/:id", (req, res) => {
-  console.log("DELETE /expenses/:id", req.params.id);
-  store = store.filter((e) => e._id !== req.params.id);
-  return res.sendStatus(204);
+// DELETE EXPENSE
+router.delete("/:id", async (req, res) => {
+  try {
+    await Expense.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: "Expense successfully deleted" });
+  } catch (error) {
+    res.status(500).json(error);
+  }
 });
 
 module.exports = router;
