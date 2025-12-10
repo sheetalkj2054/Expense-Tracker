@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 import AnalyticsCard from "./components/AnalyticsCard";
-import useTheme from "./useTheme";
 
 const Home = () => {
-  const { theme, toggleTheme } = useTheme();
   const { user, axiosAuth, logout } = useAuth();
 
   const [expenses, setExpenses] = useState([]);
@@ -92,14 +90,6 @@ const Home = () => {
         </h1>
 
         <div className="flex items-center gap-3">
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 dark:text-gray-200"
-          >
-            {theme === "light" ? "Dark Mode" : "Light Mode"}
-          </button>
-
           {/* Delete Account */}
           <button
             onClick={handleDeleteAccount}
